@@ -1,0 +1,353 @@
+```html
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organisation Fête de Classe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+    <!-- NAVIGATION -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div id="logo-admin-trigger" class="flex items-center gap-2 cursor-pointer select-none group">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm group-active:scale-95 transition-transform">
+                    <i data-lucide="school"></i>
+                </div>
+                <span class="font-bold text-xl text-slate-800">Classe Fête</span>
+            </div>
+            <div id="user-header-info" class="hidden flex items-center gap-4">
+                <div class="text-sm text-right">
+                    <p id="display-user-name" class="font-semibold text-slate-800"></p>
+                    <p class="text-slate-500 text-xs italic">Élève connecté</p>
+                </div>
+                <button onclick="logout()" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                    <i data-lucide="log-out"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        
+        <!-- SECTION AUTHENTIFICATION -->
+        <section id="auth-section" class="max-w-md mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-200 mt-10 fade-in">
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-slate-900 mb-2">Inscription à la fête</h1>
+                <p class="text-slate-500 text-sm">Entre tes infos pour choisir ton lot (21 élèves max).</p>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Prénom</label>
+                        <input type="text" id="input-prenom" required class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Ex: Ahmed">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Nom</label>
+                        <input type="text" id="input-nom" required class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="Ex: Benali">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Téléphone</label>
+                    <input type="tel" id="input-numero" required class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="06 XX XX XX XX">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">E-mail</label>
+                    <input type="email" id="input-email" required class="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" placeholder="ton@email.com">
+                </div>
+                <p id="error-message" class="hidden p-3 bg-red-50 text-red-600 rounded-lg text-sm border border-red-100"></p>
+                <button type="submit" class="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 active:scale-[0.98] transition-all shadow-lg shadow-indigo-200">
+                    Entrer sur le site
+                </button>
+            </form>
+        </section>
+
+        <!-- SECTION CHOIX DES ÉLÈVES -->
+        <section id="choice-section" class="hidden fade-in">
+            <div class="mb-8 bg-white border border-slate-200 rounded-2xl p-6 flex flex-col sm:flex-row items-center gap-4 shadow-sm">
+                <div class="bg-indigo-100 p-4 rounded-2xl text-indigo-600 shrink-0">
+                    <i data-lucide="party-popper" size="32"></i>
+                </div>
+                <div class="text-center sm:text-left">
+                    <h2 class="text-xl font-bold text-slate-800">Bonjour, <span id="welcome-name" class="text-indigo-600"></span> !</h2>
+                    <p class="text-slate-500 text-sm">Regarde ce que tes camarades ont choisi et fais ton choix (max 5 par groupe).</p>
+                </div>
+            </div>
+
+            <div id="categories-container" class="grid gap-6">
+                <!-- Les cartes seront ici -->
+            </div>
+        </section>
+
+        <!-- PANEL ADMIN (MODAL PLEIN ÉCRAN) -->
+        <section id="admin-section" class="hidden fixed inset-0 bg-slate-50 z-50 flex flex-col fade-in">
+            <header class="bg-slate-900 text-white p-4 flex justify-between items-center shadow-lg">
+                <div class="flex items-center gap-2 font-bold text-xl">
+                    <i data-lucide="shield-check" class="text-emerald-400"></i>
+                    <span>Vue Administrateur</span>
+                </div>
+                <button onclick="closeAdmin()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors flex items-center gap-2">
+                    <i data-lucide="x" size="18"></i> Quitter
+                </button>
+            </header>
+            <div class="flex-1 max-w-6xl w-full mx-auto p-4 flex flex-col md:flex-row gap-6 overflow-hidden">
+                <div id="admin-menu" class="w-full md:w-72 space-y-2 overflow-y-auto pr-2">
+                    <!-- Menu catégories admin -->
+                </div>
+                <div class="flex-1 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="p-6 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <h2 id="admin-cat-title" class="text-2xl font-bold text-slate-800">Détails des inscrits</h2>
+                        <span id="admin-count-badge" class="bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold">0 / 5</span>
+                    </div>
+                    <div class="overflow-auto flex-1">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-100 sticky top-0">
+                                <tr>
+                                    <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Élève</th>
+                                    <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Contact</th>
+                                    <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">E-mail</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-table-body" class="divide-y divide-slate-100">
+                                <!-- Données ici -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // CONFIGURATION DES DONNÉES
+        const CATEGORIES = [
+            { id: 'accessoires', name: 'Accessoires fête', icon: 'party-popper', color: 'bg-purple-100 text-purple-600 border-purple-200' },
+            { id: 'boissons', name: 'Boissons fête', icon: 'glass-water', color: 'bg-blue-100 text-blue-600 border-blue-200' },
+            { id: 'nourriture', name: 'Nourriture fête', icon: 'utensils', color: 'bg-orange-100 text-orange-600 border-orange-200' },
+            { id: 'friandises', name: 'Friandises fête', icon: 'candy', color: 'bg-pink-100 text-pink-600 border-pink-200' },
+            { id: 'gateaux', name: 'Gâteaux fête', icon: 'cake', color: 'bg-yellow-100 text-yellow-600 border-yellow-200' }
+        ];
+
+        let users = []; // Liste globale des utilisateurs {id, prenom, nom, numero, email}
+        let currentUser = null;
+        let selections = {
+            accessoires: [], boissons: [], nourriture: [], friandises: [], gateaux: []
+        };
+        let logoClicks = 0;
+
+        // DÉMARRAGE
+        window.onload = () => {
+            lucide.createIcons();
+            
+            // Gestion du Panel Admin secret (5 clics)
+            document.getElementById('logo-admin-trigger').onclick = () => {
+                logoClicks++;
+                if (logoClicks >= 5) {
+                    showAdmin();
+                    logoClicks = 0;
+                }
+                clearTimeout(window.logoTimer);
+                window.logoTimer = setTimeout(() => { logoClicks = 0; }, 2000);
+            };
+        };
+
+        // FORMULAIRE D'ENTRÉE
+        document.getElementById('login-form').onsubmit = (e) => {
+            e.preventDefault();
+            const prenom = document.getElementById('input-prenom').value.trim();
+            const nom = document.getElementById('input-nom').value.trim();
+            const numero = document.getElementById('input-numero').value.trim();
+            const email = document.getElementById('input-email').value.trim();
+
+            const full = `${prenom.toLowerCase()} ${nom.toLowerCase()}`;
+            const existing = users.find(u => `${u.prenom.toLowerCase()} ${u.nom.toLowerCase()}` === full);
+
+            if (existing) {
+                // Si le nom existe, on vérifie que c'est bien la même personne
+                if (existing.email === email || existing.numero === numero) {
+                    currentUser = existing;
+                } else {
+                    showError("Ce nom et prénom sont déjà pris par un autre élève !");
+                    return;
+                }
+            } else {
+                currentUser = { id: Date.now(), prenom, nom, numero, email };
+                users.push(currentUser);
+            }
+
+            enterSite();
+        };
+
+        function showError(msg) {
+            const el = document.getElementById('error-message');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        function enterSite() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('choice-section').classList.remove('hidden');
+            document.getElementById('user-header-info').classList.remove('hidden');
+            document.getElementById('display-user-name').textContent = `${currentUser.prenom} ${currentUser.nom}`;
+            document.getElementById('welcome-name').textContent = currentUser.prenom;
+            renderCategories();
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('choice-section').classList.add('hidden');
+            document.getElementById('user-header-info').classList.add('hidden');
+            document.getElementById('login-form').reset();
+            document.getElementById('error-message').classList.add('hidden');
+        }
+
+        // AFFICHAGE DES CATÉGORIES ET DES CHOIX DES AUTRES
+        function renderCategories() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+
+            CATEGORIES.forEach(cat => {
+                const userIdsInCat = selections[cat.id];
+                const count = userIdsInCat.length;
+                const isFull = count >= 5;
+                const hasChosenThis = userIdsInCat.includes(currentUser?.id);
+
+                // Récupérer les prénoms des élèves qui ont choisi cette catégorie
+                const participants = userIdsInCat.map(uid => {
+                    const u = users.find(user => user.id === uid);
+                    return u ? u.prenom : "";
+                }).filter(name => name !== "");
+
+                const card = document.createElement('div');
+                card.className = `p-6 rounded-3xl border-2 transition-all flex flex-col gap-4 ${
+                    hasChosenThis ? 'border-indigo-500 bg-white shadow-md' : isFull ? 'border-slate-100 bg-slate-100 opacity-80' : 'border-slate-200 bg-white hover:border-indigo-200'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 border-2 ${cat.color}">
+                                <i data-lucide="${cat.icon}" size="32"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-xl text-slate-800">${cat.name}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded-full ${isFull && !hasChosenThis ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}">
+                                        ${count} / 5 inscrits
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            ${hasChosenThis ? 
+                                `<span class="flex items-center gap-2 text-indigo-600 font-bold bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100"><i data-lucide="check-circle-2" size="20"></i> Ton choix</span>` : 
+                                `<button onclick="makeChoice('${cat.id}')" ${isFull ? 'disabled' : ''} class="w-full md:w-auto px-6 py-3 rounded-xl font-bold transition-all ${isFull ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-indigo-600 hover:-translate-y-1 shadow-md shadow-slate-200'}">
+                                    ${isFull ? 'Complet' : 'Je m\'inscris'}
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- Liste des élèves ayant choisi ce lot -->
+                    <div class="pt-4 border-t border-slate-50">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Ont déjà choisi ce lot :</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${participants.length > 0 ? 
+                                participants.map(p => `<span class="px-3 py-1 bg-slate-50 border border-slate-100 text-slate-700 text-sm rounded-lg font-medium">${p}</span>`).join('') :
+                                `<span class="text-sm text-slate-400 italic font-normal">Personne pour le moment</span>`
+                            }
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function makeChoice(catId) {
+            if (selections[catId].length >= 5) {
+                alert("Oups, c'est complet !");
+                return;
+            }
+            // On enlève des autres catégories pour ne pas choisir deux trucs
+            Object.keys(selections).forEach(k => {
+                selections[k] = selections[k].filter(uid => uid !== currentUser.id);
+            });
+            // On ajoute
+            selections[catId].push(currentUser.id);
+            renderCategories();
+        }
+
+        // LOGIQUE ADMIN
+        function showAdmin() {
+            document.getElementById('admin-section').classList.remove('hidden');
+            renderAdminMenu();
+        }
+
+        function closeAdmin() {
+            document.getElementById('admin-section').classList.add('hidden');
+        }
+
+        function renderAdminMenu() {
+            const menu = document.getElementById('admin-menu');
+            menu.innerHTML = '<h3 class="font-bold text-slate-400 text-xs uppercase mb-4 px-2">Répartition des lots</h3>';
+            
+            CATEGORIES.forEach(cat => {
+                const count = selections[cat.id].length;
+                const btn = document.createElement('button');
+                btn.className = "w-full flex items-center justify-between p-4 rounded-2xl transition-all border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 mb-2";
+                btn.onclick = () => showAdminDetails(cat.id);
+                btn.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="${cat.icon}" size="20"></i>
+                        <span class="font-bold text-sm">${cat.name}</span>
+                    </div>
+                    <span class="text-xs font-black bg-slate-900 text-white px-2 py-0.5 rounded-lg">${count}/5</span>
+                `;
+                menu.appendChild(btn);
+            });
+            lucide.createIcons();
+            if (CATEGORIES.length > 0) showAdminDetails(CATEGORIES[0].id);
+        }
+
+        function showAdminDetails(catId) {
+            const cat = CATEGORIES.find(c => c.id === catId);
+            document.getElementById('admin-cat-title').textContent = cat.name;
+            document.getElementById('admin-count-badge').textContent = `${selections[catId].length} / 5 élèves`;
+            
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+
+            selections[catId].forEach(uid => {
+                const u = users.find(user => user.id === uid);
+                if (u) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="p-4 font-bold text-slate-800">${u.prenom} ${u.nom}</td>
+                        <td class="p-4 text-slate-600 font-medium">${u.numero}</td>
+                        <td class="p-4 text-slate-400 text-sm">${u.email}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            });
+
+            if (selections[catId].length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-slate-400 italic">Aucun élève inscrit ici pour le moment.</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>
+
+```
